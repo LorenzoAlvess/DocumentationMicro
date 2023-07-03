@@ -1,0 +1,443 @@
+openapi: 3.0.0
+info:
+  title: Auth - API MICRO
+  description: ""
+  contact:
+    name: Lorenzo
+    url: contact
+  version: 1.0.0
+servers:
+- url: "https://teste/{version}"
+  variables:
+    version:
+      default: v1
+
+paths:
+  /login:
+    post:
+      summary: Realiza login e retorna token de acesso
+      tags:
+      - Auth
+      operationId: login_post
+      requestBody:
+        description: Credenciais de login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Email do usuário
+                  format: email
+                password:
+                  type: string
+                  description: Senha do usuário
+                  format: password
+      responses:
+        "200":
+          description: Token de acesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "401":
+          description: Requisição não autorizada
+        "500":
+          description: Erro interno no servidor
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+
+  /register:
+    post:
+      summary: Registra novo usuário
+      tags:
+      - Auth
+      operationId: register_post
+      requestBody:
+        description: Dados do usuário a ser registrado
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nome do usuário
+                email:
+                  type: string
+                  description: Email do usuário
+                  format: email
+                password:
+                  type: string
+                  description: Senha do usuário
+                  format: password
+                registration:
+                  type: string
+                  description: Matricula de registro
+
+        required: true
+      responses:
+        "200":
+          description: Usuário registrado com sucesso
+        "422":
+          description: Entidade não processável
+        "500":
+          description: Erro interno no servidor
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+
+  /me:
+    get:
+      summary: Obtém informações do usuário autenticado
+      tags:
+      - Auth
+      operationId: me_get
+      parameters:
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Informações do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          description: Requisição não autorizada
+        "500":
+          description: Erro interno no servidor
+      security:
+      - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+
+  /logout:
+    delete:
+      summary: Realiza logout do usuário autenticado
+      tags:
+        - Auth
+      operationId: logout_delete
+      parameters:
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Logout realizado com sucesso
+        "401":
+          description: Requisição não autorizada
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+
+
+  /refresh-token:
+    get:
+      summary: Atualiza o token de acesso do usuário autenticado
+      tags:
+        - Auth
+      operationId: refresh_token_get
+      parameters:
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token de acesso atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "401":
+          description: Requisição não autorizada
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+
+  
+  paths:
+  /users:
+    get:
+      summary: Obtém a lista de usuários
+      tags:
+        - Users
+      operationId: users_get
+      parameters:
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de usuários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        "401":
+          description: Requisição não autorizada
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+
+  /user/{id}:
+    put:
+      summary: Atualiza um usuário existente
+      tags:
+        - Users
+      operationId: user_put
+      parameters:
+        - name: id
+          in: path
+          description: ID do usuário a ser atualizado
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Dados do usuário a serem atualizados
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        "200":
+          description: Usuário atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          description: Requisição não autorizada
+        "404":
+          description: Usuário não encontrado
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+
+  /users/{id}:
+    get:
+      summary: Obtém informações de um usuário específico
+      tags:
+        - Users
+      operationId: users_id_get
+      parameters:
+        - name: id
+          in: path
+          description: ID do usuário a ser obtido
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Informações do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "401":
+          description: Requisição não autorizada
+        "404":
+          description: Usuário não encontrado
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+
+    delete:
+      summary: Exclui um usuário existente
+      tags:
+        - Users
+      operationId: users_id_delete
+      parameters:
+        - name: id
+          in: path
+          description: ID do usuário a ser excluído
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: Authorization
+          in: header
+          description: Token de acesso do usuário autenticado
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Usuário excluído com sucesso
+        "401":
+          description: Requisição não autorizada
+        "404":
+          description: Usuário não encontrado
+        "500":
+          description: Erro interno no servidor
+      security:
+        - bearerAuth: []
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+
+
+components:
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: object
+          description: Token de acesso do usuário autenticado
+          properties:
+            name:
+              type: string
+              description: Nome do usuário
+            abilities:
+              type: array
+              description: Lista de habilidades do usuário
+              items:
+                type: string
+            expiresAt:
+              type: string
+              description: Data de expiração do token
+              format: date-time
+            tokenableId:
+              type: integer
+              description: ID do token
+            tokenableType:
+              type: string
+              description: Tipo do token
+            updatedAt:
+              type: string
+              description: Data de atualização do token
+              format: date-time
+            createdAt:
+              type: string
+              description: Data de criação do token
+              format: date-time
+            id:
+              type: integer
+              description: Identificador único do token
+      plainTextToken:
+        type: string
+        description: Token de acesso em texto plano
+      example:
+        accessToken:
+          name: John Doe
+          abilities:
+            - "*"
+          expiresAt: 2023-07-02T12:00:00Z
+          tokenableId: 123
+          tokenableType: "user"
+          updatedAt: 2023-07-01T10:00:00Z
+          createdAt: 2023-07-01T10:00:00Z
+          id: 456
+        plainTextToken: random_token_example
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único do usuário
+          format: int64
+        name:
+          type: string
+          description: Nome do usuário
+        registration:
+          type: string
+          description: Número de matricula do usuário
+        email:
+          type: string
+          description: Email do usuário
+          format: email
+        email_verified_at:
+          type: string
+          description: Data de verificação do email do usuário
+          format: date-time
+        admin:
+          type: boolean
+          description: Indica se o usuário é um administrador
+        created_at:
+          type: string
+          description: Data de criação do usuário
+          format: date-time
+        updated_at:
+          type: string
+          description: Data de atualização do usuário
+          format: date-time
+      example:
+        id: 123
+        name: John Doe
+        registration: ABC123
+        email: johndoe@example.com
+        email_verified_at: 2023-07-01T10:00:00Z
+        admin: true
+        created_at: 2023-07-01T10:00:00Z
+        updated_at: 2023-07-01T12:00:00Z
+    
+    RegisterResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email do usuário registrado
+          format: email
+        name:
+          type: string
+          description: Nome do usuário registrado
+        registration:
+          type: string
+          description: Número de matricula de usuário
+        update_at:
+          type: string
+          format: date-time
+          description: Data e hora da última atualização do usuário
+        created_at:
+          type: string
+          format: date-time
+          description: Data e hora de criação do usuário
+        id:
+          type: integer
+          description: Identificador único do usuário registrado
+          format: int64
+      example:
+        email: example@example.com
+        name: John Doe
+        registration: Registered successfully
+        update_at: '2023-07-02T10:30:00Z'
+        created_at: '2023-07-02T10:30:00Z'
+        id: 12345
